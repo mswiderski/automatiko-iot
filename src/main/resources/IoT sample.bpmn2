@@ -2,42 +2,66 @@
 <!-- origin at X=0.0 Y=0.0 -->
 <bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:automatiko="https://automatiko.io" xmlns="https://automatiko.io" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:java="http://www.java.com/javaTypes" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd https://automatiko.io automatiko.xsd" id="Definition" exporter="org.eclipse.bpmn2.modeler.core" exporterVersion="2.0.0" expressionLanguage="http://www.mvel.org/2.0" targetNamespace="https://automatiko.io" typeLanguage="http://www.java.com/javaTypes">
   <bpmn2:itemDefinition id="ItemDefinition_61" isCollection="false" structureRef="org.acme.iot_sample.Temperature"/>
+  <bpmn2:itemDefinition id="ItemDefinition_92" isCollection="false" structureRef="java.util.List&lt;org.acme.iot_sample.Temperature&gt;"/>
   <bpmn2:message id="Message_1" itemRef="ItemDefinition_61" name="temperature">
     <bpmn2:extensionElements>
       <automatiko:metaData name="correlationExpression">
-        <automatiko:metaValue><![CDATA[eventData.getRoom()]]></automatiko:metaValue>
+        <automatiko:metaValue><![CDATA[topic(message, 1)]]></automatiko:metaValue>
+      </automatiko:metaData>
+      <automatiko:metaData name="topic">
+        <automatiko:metaValue><![CDATA[home/+/temp]]></automatiko:metaValue>
       </automatiko:metaData>
     </bpmn2:extensionElements>
   </bpmn2:message>
-  <bpmn2:process id="sample" automatiko:packageName="com.acme.iot" name="IoT sample" isExecutable="true" processType="Public">
+  <bpmn2:process id="sample" automatiko:packageName="com.acme.iot" automatiko:adHoc="true" name="IoT sample" isExecutable="true" processType="Public">
     <bpmn2:documentation id="Documentation_3"><![CDATA[Sample IoT workflow that reads data from temp sensor.]]></bpmn2:documentation>
     <bpmn2:extensionElements>
       <automatiko:import name="org.acme.iot_sample.Temperature"/>
+      <automatiko:import name="java.util.List"/>
     </bpmn2:extensionElements>
     <bpmn2:startEvent id="StartEvent_1" name="StartProcess">
       <bpmn2:extensionElements>
         <automatiko:metaData name="elementname">
           <automatiko:metaValue><![CDATA[StartProcess]]></automatiko:metaValue>
         </automatiko:metaData>
+        <automatiko:metaData name="acceptStartSignal">
+          <automatiko:metaValue><![CDATA[true]]></automatiko:metaValue>
+        </automatiko:metaData>
       </bpmn2:extensionElements>
       <bpmn2:outgoing>SequenceFlow_1</bpmn2:outgoing>
-      <bpmn2:outputSet id="OutputSet_1" name="Output Set 1"/>
+      <bpmn2:dataOutput id="DataOutput_1" itemSubjectRef="ItemDefinition_61" name="Message_1_Output"/>
+      <bpmn2:dataOutputAssociation id="DataOutputAssociation_1">
+        <bpmn2:sourceRef>DataOutput_1</bpmn2:sourceRef>
+        <bpmn2:assignment id="Assignment_2">
+          <bpmn2:from xsi:type="bpmn2:tFormalExpression" id="FormalExpression_3">DataOutput_1</bpmn2:from>
+          <bpmn2:to xsi:type="bpmn2:tFormalExpression" id="FormalExpression_5">#{temp[+]}</bpmn2:to>
+        </bpmn2:assignment>
+      </bpmn2:dataOutputAssociation>
+      <bpmn2:outputSet id="OutputSet_1" name="Output Set 1">
+        <bpmn2:dataOutputRefs>DataOutput_1</bpmn2:dataOutputRefs>
+      </bpmn2:outputSet>
       <bpmn2:messageEventDefinition id="MessageEventDefinition_1" messageRef="Message_1"/>
     </bpmn2:startEvent>
-    <bpmn2:dataObject id="temp" name="temp" itemSubjectRef="ItemDefinition_61"/>
+    <bpmn2:dataObject id="temp" name="temp" itemSubjectRef="ItemDefinition_92">
+      <bpmn2:extensionElements>
+        <automatiko:metaData name="tags">
+          <automatiko:metaValue><![CDATA[auto-initialized]]></automatiko:metaValue>
+        </automatiko:metaData>
+      </bpmn2:extensionElements>
+    </bpmn2:dataObject>
     <bpmn2:userTask id="UserTask_1" name="Show latest value">
       <bpmn2:extensionElements>
         <automatiko:metaData name="elementname">
           <automatiko:metaValue><![CDATA[Show latest value]]></automatiko:metaValue>
         </automatiko:metaData>
       </bpmn2:extensionElements>
-      <bpmn2:incoming>SequenceFlow_1</bpmn2:incoming>
+      <bpmn2:incoming>SequenceFlow_3</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_2</bpmn2:outgoing>
       <bpmn2:ioSpecification id="InputOutputSpecification_1">
         <bpmn2:dataInput id="DataInput_1" name="TaskName"/>
         <bpmn2:dataInput id="DataInput_2" name="Exluded users"/>
         <bpmn2:dataInput id="DataInput_3" name="Groups"/>
-        <bpmn2:dataInput id="DataInput_4" itemSubjectRef="ItemDefinition_61" name="currentValue"/>
+        <bpmn2:dataInput id="DataInput_4" itemSubjectRef="ItemDefinition_92" name="currentValue"/>
         <bpmn2:inputSet id="_InputSet_2">
           <bpmn2:dataInputRefs>DataInput_1</bpmn2:dataInputRefs>
           <bpmn2:dataInputRefs>DataInput_2</bpmn2:dataInputRefs>
@@ -64,7 +88,7 @@
         <bpmn2:targetRef>DataInput_4</bpmn2:targetRef>
       </bpmn2:dataInputAssociation>
     </bpmn2:userTask>
-    <bpmn2:sequenceFlow id="SequenceFlow_1" automatiko:priority="1" sourceRef="StartEvent_1" targetRef="UserTask_1"/>
+    <bpmn2:sequenceFlow id="SequenceFlow_1" automatiko:priority="1" sourceRef="StartEvent_1" targetRef="ExclusiveGateway_1"/>
     <bpmn2:endEvent id="EndEvent_1" name="End Event 1">
       <bpmn2:extensionElements>
         <automatiko:metaData name="elementname">
@@ -74,13 +98,30 @@
       <bpmn2:incoming>SequenceFlow_2</bpmn2:incoming>
     </bpmn2:endEvent>
     <bpmn2:sequenceFlow id="SequenceFlow_2" automatiko:priority="1" sourceRef="UserTask_1" targetRef="EndEvent_1"/>
+    <bpmn2:exclusiveGateway id="ExclusiveGateway_1" name="Exclusive Gateway 1" gatewayDirection="Diverging" default="SequenceFlow_4">
+      <bpmn2:incoming>SequenceFlow_1</bpmn2:incoming>
+      <bpmn2:outgoing>SequenceFlow_3</bpmn2:outgoing>
+      <bpmn2:outgoing>SequenceFlow_4</bpmn2:outgoing>
+    </bpmn2:exclusiveGateway>
+    <bpmn2:sequenceFlow id="SequenceFlow_3" automatiko:priority="1" sourceRef="ExclusiveGateway_1" targetRef="UserTask_1">
+      <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression" id="FormalExpression_6" language="http://www.java.com/java">temp.size() > 5</bpmn2:conditionExpression>
+    </bpmn2:sequenceFlow>
+    <bpmn2:endEvent id="EndEvent_2" name="End Event 2">
+      <bpmn2:extensionElements>
+        <automatiko:metaData name="elementname">
+          <automatiko:metaValue><![CDATA[End Event 2]]></automatiko:metaValue>
+        </automatiko:metaData>
+      </bpmn2:extensionElements>
+      <bpmn2:incoming>SequenceFlow_4</bpmn2:incoming>
+    </bpmn2:endEvent>
+    <bpmn2:sequenceFlow id="SequenceFlow_4" automatiko:priority="1" sourceRef="ExclusiveGateway_1" targetRef="EndEvent_2"/>
   </bpmn2:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_Process_1" bpmnElement="sample">
       <bpmndi:BPMNShape id="BPMNShape_StartEvent_1" bpmnElement="StartEvent_1">
-        <dc:Bounds height="36.0" width="36.0" x="252.0" y="185.0"/>
+        <dc:Bounds height="36.0" width="36.0" x="60.0" y="185.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_1">
-          <dc:Bounds height="11.0" width="52.0" x="244.0" y="221.0"/>
+          <dc:Bounds height="11.0" width="52.0" x="52.0" y="221.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_DataObject_1" bpmnElement="temp">
@@ -101,17 +142,22 @@
           <dc:Bounds height="11.0" width="50.0" x="511.0" y="221.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge id="BPMNEdge_DataOutputAssociation_1" sourceElement="BPMNShape_StartEvent_1" targetElement="BPMNShape_DataObject_1">
-        <di:waypoint xsi:type="dc:Point" x="270.0" y="185.0"/>
-        <di:waypoint xsi:type="dc:Point" x="270.0" y="148.0"/>
-        <di:waypoint xsi:type="dc:Point" x="278.0" y="148.0"/>
-        <di:waypoint xsi:type="dc:Point" x="278.0" y="110.0"/>
-        <bpmndi:BPMNLabel id="BPMNLabel_5"/>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_1" bpmnElement="SequenceFlow_1" sourceElement="BPMNShape_StartEvent_1" targetElement="BPMNShape_UserTask_1">
-        <di:waypoint xsi:type="dc:Point" x="288.0" y="203.0"/>
-        <di:waypoint xsi:type="dc:Point" x="314.0" y="203.0"/>
-        <di:waypoint xsi:type="dc:Point" x="340.0" y="203.0"/>
+      <bpmndi:BPMNShape id="BPMNShape_ExclusiveGateway_1" bpmnElement="ExclusiveGateway_1" isMarkerVisible="true">
+        <dc:Bounds height="50.0" width="50.0" x="193.0" y="178.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="22.0" width="44.0" x="196.0" y="228.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_EndEvent_2" bpmnElement="EndEvent_2">
+        <dc:Bounds height="36.0" width="36.0" x="342.0" y="282.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="11.0" width="50.0" x="335.0" y="318.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_1" bpmnElement="SequenceFlow_1" sourceElement="BPMNShape_StartEvent_1" targetElement="BPMNShape_ExclusiveGateway_1">
+        <di:waypoint xsi:type="dc:Point" x="96.0" y="203.0"/>
+        <di:waypoint xsi:type="dc:Point" x="144.0" y="203.0"/>
+        <di:waypoint xsi:type="dc:Point" x="193.0" y="203.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_6"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_2" bpmnElement="SequenceFlow_2" sourceElement="BPMNShape_UserTask_1" targetElement="BPMNShape_EndEvent_1">
@@ -125,6 +171,18 @@
         <di:waypoint xsi:type="dc:Point" x="395.0" y="85.0"/>
         <di:waypoint xsi:type="dc:Point" x="395.0" y="178.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_8"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_3" bpmnElement="SequenceFlow_3" sourceElement="BPMNShape_ExclusiveGateway_1" targetElement="BPMNShape_UserTask_1">
+        <di:waypoint xsi:type="dc:Point" x="243.0" y="203.0"/>
+        <di:waypoint xsi:type="dc:Point" x="291.0" y="203.0"/>
+        <di:waypoint xsi:type="dc:Point" x="340.0" y="203.0"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_4" bpmnElement="SequenceFlow_4" sourceElement="BPMNShape_ExclusiveGateway_1" targetElement="BPMNShape_EndEvent_2">
+        <di:waypoint xsi:type="dc:Point" x="218.0" y="228.0"/>
+        <di:waypoint xsi:type="dc:Point" x="218.0" y="300.0"/>
+        <di:waypoint xsi:type="dc:Point" x="342.0" y="300.0"/>
+        <bpmndi:BPMNLabel/>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
